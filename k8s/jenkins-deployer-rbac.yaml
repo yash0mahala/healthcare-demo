@@ -1,0 +1,28 @@
+# Bind this only to the Jenkins service account used for deployment.
+# Replace `jenkins` with the actual service account and namespace in your cluster.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: healthcare-demo-deployer
+  namespace: healthcare-demo
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["services", "pods"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: healthcare-demo-jenkins-deployer
+  namespace: healthcare-demo
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: jenkins
+roleRef:
+  kind: Role
+  name: healthcare-demo-deployer
+  apiGroup: rbac.authorization.k8s.io

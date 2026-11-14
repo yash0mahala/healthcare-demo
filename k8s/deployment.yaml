@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthcare-demo-COLOR_PLACEHOLDER
+  namespace: healthcare-demo
+  labels:
+    app.kubernetes.io/name: healthcare-demo
+    app.kubernetes.io/component: api
+    app.kubernetes.io/color: COLOR_PLACEHOLDER
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: healthcare-demo
+      app.kubernetes.io/component: api
+      app.kubernetes.io/color: COLOR_PLACEHOLDER
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthcare-demo
+        app.kubernetes.io/component: api
+        app.kubernetes.io/color: COLOR_PLACEHOLDER
+    spec:
+      serviceAccountName: healthcare-demo
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 15
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
