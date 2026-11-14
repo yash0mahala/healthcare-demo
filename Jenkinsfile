@@ -91,18 +91,30 @@ pipeline {
       }
     }
 
-    stage('Publish image') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'registry-credentials', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
-          sh '''#!/usr/bin/env bash
-            set -euo pipefail
-            printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" --username "$REGISTRY_USER" --password-stdin
-            docker push "$IMAGE"
-            docker logout "$REGISTRY"
-          '''
-        }
-      }
+    
+stage('Publish image') {
+  steps {
+    withCredentials([
+      usernamePassword(
+        credentialsId: 'registry-credentials',
+        usernameVariable: 'REGISTRY_USER',
+        passwordVariable: 'REGISTRY_PASSWORD'
+      )
+    ]) {
+      sh '''#!/usr/bin/env bash
+        set -euo pipefail
+
+        printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" \
+          --username "$REGISTRY_USER" --password-stdin
+
+        trap 'docker logout "$REGISTRY_HOST" >/dev/null 2>&1 || true' EXIT
+
+        docker push "$IMAGE"
+      '''
     }
+  }
+}
+
 
     stage('Blue-green deploy') {
       steps {
