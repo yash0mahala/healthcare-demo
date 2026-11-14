@@ -10,7 +10,7 @@ pipeline {
 
   parameters {
     string(name: 'REGISTRY_HOST', defaultValue: 'docker.io', description: 'Container registry host')
-    string(name: 'IMAGE_REPOSITORY', defaultValue: 'replace-with-your-dockerhub-user/healthcare-demo', description: 'Repository path without registry host')
+    string(name: 'IMAGE_REPOSITORY', defaultValue: 'yash361/healthcare-demo', description: 'Repository path without registry host')
     string(name: 'DEPLOY_NAMESPACE', defaultValue: 'healthcare-demo', description: 'Kubernetes namespace')
   }
 
