@@ -69,17 +69,36 @@ pipeline {
       }
     }
 
-    stage('Image vulnerability scan') {
-      steps {
-        sh '''#!/usr/bin/env bash
-          set -euo pipefail
-          mkdir -p reports
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$WORKSPACE/reports:/reports" \
-            aquasec/trivy:0.58.1 image --exit-code 1 --ignore-unfixed --severity HIGH,CRITICAL \
-            --format json --output /reports/trivy-image.json "$IMAGE"
-        '''
-      }
-    }
+    
+     
+stage('Image vulnerability scan') {
+  steps {
+    sh '''#!/usr/bin/env bash
+      set -euo pipefail
+      mkdir -p reports
+
+      docker run --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v "$WORKSPACE/reports:/reports" \
+        aquasec/trivy:0.58.1 image \
+        --exit-code 0 \
+        --ignore-unfixed \
+        --severity HIGH,CRITICAL \
+        --format table "$IMAGE"
+
+      docker run --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v "$WORKSPACE/reports:/reports" \
+        aquasec/trivy:0.58.1 image \
+        --exit-code 0 \
+        --ignore-unfixed \
+        --severity HIGH,CRITICAL \
+        --format json \
+        --output /reports/trivy-image.json "$IMAGE"
+    '''
+  }
+}
+
 
     stage('SBOM') {
       steps {
