@@ -72,35 +72,28 @@ pipeline {
     
      
 
-stage('Image vulnerability scan') {
+
+stage('Publish image') {
   steps {
-    sh '''#!/usr/bin/env bash
-      set -euo pipefail
-      mkdir -p reports
+    withCredentials([
+      usernamePassword(
+        credentialsId: 'registry-credentials',
+        usernameVariable: 'REGISTRY_USER',
+        passwordVariable: 'REGISTRY_PASSWORD'
+      )
+    ]) {
+      sh '''#!/usr/bin/env bash
+        set -euo pipefail
 
-      docker run --rm \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v "$WORKSPACE/reports:/reports" \
-        -v trivy-cache:/root/.cache/trivy \
-        aquasec/trivy:0.58.1 image \
-        --timeout 20m \
-        --exit-code 0 \
-        --ignore-unfixed \
-        --severity HIGH,CRITICAL \
-        --format table "$IMAGE"
+        printf '%s' "$REGISTRY_PASSWORD" | docker login \
+          --username "$REGISTRY_USER" \
+          --password-stdin
 
-      docker run --rm \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v "$WORKSPACE/reports:/reports" \
-        -v trivy-cache:/root/.cache/trivy \
-        aquasec/trivy:0.58.1 image \
-        --timeout 20m \
-        --exit-code 0 \
-        --ignore-unfixed \
-        --severity HIGH,CRITICAL \
-        --format json \
-        --output /reports/trivy-image.json "$IMAGE"
-    '''
+        docker push "$IMAGE"
+
+        docker logout
+      '''
+    }
   }
 }
 
