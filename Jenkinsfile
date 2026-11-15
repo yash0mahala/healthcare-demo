@@ -71,6 +71,7 @@ pipeline {
 
     
      
+
 stage('Image vulnerability scan') {
   steps {
     sh '''#!/usr/bin/env bash
@@ -80,7 +81,9 @@ stage('Image vulnerability scan') {
       docker run --rm \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v "$WORKSPACE/reports:/reports" \
+        -v trivy-cache:/root/.cache/trivy \
         aquasec/trivy:0.58.1 image \
+        --timeout 20m \
         --exit-code 0 \
         --ignore-unfixed \
         --severity HIGH,CRITICAL \
@@ -89,7 +92,9 @@ stage('Image vulnerability scan') {
       docker run --rm \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v "$WORKSPACE/reports:/reports" \
+        -v trivy-cache:/root/.cache/trivy \
         aquasec/trivy:0.58.1 image \
+        --timeout 20m \
         --exit-code 0 \
         --ignore-unfixed \
         --severity HIGH,CRITICAL \
@@ -98,6 +103,7 @@ stage('Image vulnerability scan') {
     '''
   }
 }
+
 
 
     stage('SBOM') {
